@@ -1,0 +1,19 @@
+{
+  "name": "bikerental",
+  "version": "0.0.0",
+  "description": "bikerental",
+  "main": "app.js",
+  "author": {
+    "name": ""
+  },
+  "devDependencies": {
+    "eslint": "^8.21.0"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "devstart": "nodemon app.js",
+    "serverstart": "npm run devstart"
+  },
+  "eslintConfig": {
+  }
+}
