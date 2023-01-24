@@ -1,7 +1,6 @@
 const Inventory = require('../models/inventory');
 const Station = require('../models/station');
 const Vehicle = require('../models/vehicle');
-const Booking = require('../models/booking');
 
 exports.add = (req, res) => {
     const { vehicleId, stationId } = req.body;
@@ -73,7 +72,7 @@ exports.remove = (req, res) => {
 
 exports.book = (req, res) => {
     const { id, userId, startDate, endDate } = req.body;
-// Implement user authentication here...
+    // Implement user authentication here...
     () => {
         if (err) return res.status(500).send(err);
         if (!inventory) return res.status(404).send({ message: 'Inventory not found' });

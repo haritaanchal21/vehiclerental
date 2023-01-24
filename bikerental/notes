@@ -1,0 +1,32 @@
+On create vehicle:
+- create vehicle table
+- post Api for vehicle creation
+
+On create station:
+- create station table
+- post Api for station creation
+
+Dekho hum batate hain
+
+Vehicle
+id  etc
+1         
+2         
+3        
+
+Station
+id etc
+1
+2
+3
+
+Inventory
+
+id StationId VehicleId isAvailable bookingId
+1    1          1          1          null
+1    1          2          0          1
+
+Booking
+
+id userId issueDate returnDate
+1    1      12        null
