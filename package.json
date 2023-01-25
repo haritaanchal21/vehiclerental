@@ -1,11 +1,9 @@
 {
-  "name": "bikerental",
+  "name": "vehiclerental",
   "version": "0.0.0",
-  "description": "bikerental",
+  "description": "vehiclerental",
   "main": "app.js",
-  "author": {
-    "name": ""
-  },
+  "author": "",
   "devDependencies": {
     "eslint": "^8.21.0"
   },
@@ -14,6 +12,17 @@
     "devstart": "nodemon app.js",
     "serverstart": "npm run devstart"
   },
-  "eslintConfig": {
+  "eslintConfig": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haritaanchal21/vehiclerental.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/haritaanchal21/vehiclerental/issues"
+  },
+  "homepage": "https://github.com/haritaanchal21/vehiclerental#readme",
+  "dependencies": {
+    "nodemon": "^2.0.20"
   }
 }

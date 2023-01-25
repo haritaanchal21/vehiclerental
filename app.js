@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-var uri = "mongodb://localhost:27017/Vehicle";
+var uri = "mongodb://127.0.0.1:27017/details";
 
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
@@ -31,18 +31,40 @@ mongoose.connection.on('connected', () => {
     console.log('Mongoose default connection open');
 });
 
+
+//Schema objects
+
+//user schema
 const userSchema = new mongoose.Schema({
     phone: String,
     password: String,
     role: Number
 });
 
+//vehicle scehma
+const VehicleSchema = new mongoose.Schema({
+    make: String,
+    model: String,
+    licensePlate: String,
+    qrCode: String
+});
+
+//station scehma
+const StationSchema = new mongoose.Schema({
+    name :String,
+    location: String,
+    capacity: Number
+});
+
 //userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
 const User = new mongoose.model("User", userSchema);
+const Vehicle = new mongoose.model("Vehicle", VehicleSchema);
+const Station = mongoose.model('Station', StationSchema);
 
-console.log("hello world")
-const port = 3000;
+
+
+
 app.get("/", function (req, res) {
     res.render("home");
 });
@@ -60,12 +82,20 @@ app.get("/landing", function (req, res) {
 app.get("/adminLanding", function (req, res) {
     res.render("adminLanding");
 });
-app.get("/createVehicle", function (req, res) {
-    res.render("createVehicle");
+app.get("/vehicle", function (req, res) {
+    res.render("vehicle");
 });
-app.get("/createStation", function (req, res) {
-    res.render("createStation");
+app.get("/station", function (req, res) {
+    res.render("station");
 });
+app.get("/assignstation", function (req, res) {
+    res.render("AssignStation");
+});
+app.get("/getstation", function (req, res) {
+    res.render("getStation");
+});
+
+
 
 app.post("/register", function (req, res) {
 
@@ -108,8 +138,55 @@ app.post("/login", function (req, res) {
             console.log(err ? err : 'errored');
         }
     });
-
 });
+
+
+app.post("/station/register", function (req, res) {
+    Station.findOne({ location: req.body.location }, function (err, foundUser) {
+        if (foundUser) {
+            console.log(foundUser)
+            res.send('<script>alert("station already exist, redirecting to station adding page!!!"); window.location.href = "/station";</script>');
+        } else {
+            const newStation = new Station({
+                name: req.body.station_name,
+                location: req.body.location,
+                capacity: req.body.capacity
+            });
+            newStation.save(function (err) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    res.send('<script>alert("station successfully added!!!"); window.location.href = "/station" </script>')
+                }
+            });
+        }
+    });
+});
+
+app.post("/station/register", function (req, res) {
+    Vehicle.findOne({ licensePlate: req.body.license_Plate }, function (err, foundUser) {
+        if (foundUser) {
+            res.send('<script>alert("vehicle already exist, redirecting to vehicle adding page!!!"); window.location.href = "/vehicle";</script>');
+        } else {
+            const newVehicle = new Vehicle({
+                model: req.body.model,
+                licensePlate: req.body.license_Plate,
+                qrCode: req.body.QR_code
+            });
+            newVehicle.save(function (err) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    res.send('<script>alert("vehicle successfully added!!!"); window.location.href = "/vehicle" </script>')
+                }
+            });
+        }
+    });
+});
+
+
+
+const port = 3000;
 app.listen(port, function () {
     console.log("Server is running on Port: " + port);
 });
