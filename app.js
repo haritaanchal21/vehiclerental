@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config()
+//require('dotenv').config()
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -31,39 +31,12 @@ mongoose.connection.on('connected', () => {
     console.log('Mongoose default connection open');
 });
 
-
-//Schema objects
-
-//user schema
-const userSchema = new mongoose.Schema({
-    phone: String,
-    password: String,
-    role: Number
-});
-
-//vehicle scehma
-const VehicleSchema = new mongoose.Schema({
-    make: String,
-    model: String,
-    licensePlate: String,
-    qrCode: String
-});
-
-//station scehma
-const StationSchema = new mongoose.Schema({
-    name :String,
-    location: String,
-    capacity: Number
-});
-
 //userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
-const User = new mongoose.model("User", userSchema);
-const Vehicle = new mongoose.model("Vehicle", VehicleSchema);
-const Station = mongoose.model('Station', StationSchema);
-
-
-
+const User = require("./models/user");
+const Vehicle = require("./models/vehicle");
+const Station = require("./models/station");
+const Inventory = require("./models/inventory");
 
 app.get("/", function (req, res) {
     res.render("home");
@@ -91,9 +64,6 @@ app.get("/station", function (req, res) {
 app.get("/assignstation", function (req, res) {
     res.render("AssignStation");
 });
-//app.get("/getstation", function (req, res) {
-//    res.render("getStation");
-//});
 
 
 
@@ -123,13 +93,14 @@ app.post("/login", function (req, res) {
     const phone = req.body.phone;
     const password = req.body.password;
 
-    User.findOne({ phone: phone }, function (err, foundUser) {
+    User.findOne({ phone: phone }, async (err, foundUser) => {
         if (foundUser) {
+            const inventory = await mongoose.model("Inventory").find().populate(['station', 'vehicle']);
             if (foundUser.password === password) {
                 if (foundUser.role === 1) {
-                    res.redirect("adminLanding");
+                    res.render("adminLanding", { inventory });
                 } else {
-                    res.redirect("landing");
+                    res.render("landing", { inventory });
                 }
             } else {
                 res.send('<script>alert("Wrong Password"); window.location.href = "/login";</script>');
@@ -184,9 +155,44 @@ app.post("/vehicle/register", function (req, res) {
     });
 });
 
-app.get("/station/list", async (req, res) => {
-    const stations = await mongoose.model("Station").find();
-    res.render("getStation", { stations });
+app.get("/station/assign", async (req, res) => {
+    let stations = await mongoose.model("Station").find();
+    let vehicles = await mongoose.model("Vehicle").find();
+    res.render("assign", { stations, vehicles });
+});
+
+app.post("/inventory", async (req, res) => {
+    try {
+        const { vehicle, station } = req.body;
+        const stationData = await mongoose.model("Station").findOne({ _id: station });
+        if (!station) {
+            return res.status(404).send("Station not found");
+        }
+        let stationCapacity = stationData.capacity;
+        let vehicleCount = await mongoose.model("Inventory").countDocuments({ station: req.body.station });
+        const inventoryData = await Inventory.findOne({ vehicle });
+        if (!inventoryData) {
+            if (stationCapacity > vehicleCount) {
+                const inventory = new Inventory({
+                    vehicle,
+                    station
+                });
+                inventory.save(function (err) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        res.send('<script>alert("inventory successfully added!!!"); window.location.href = "/station/assign" </script>')
+                    }
+                });
+            } else {
+                res.send('<script>alert("Station limit reached!!!"); window.location.href = "/station/assign" </script>')
+            }
+        } else {
+            res.send('<script>alert("Station limit reached!!!"); window.location.href = "/station/assign" </script>')
+        }
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
 
 

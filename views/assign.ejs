@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+
+
+  <div class="jumbotron centered">
+    <div class="container">
+      <i class="fas fa-key fa-6x"></i>
+      <h1 class="display-3">Assign vehicles to stations</h1>
+      <form action="/inventory" method="POST">
+        <label for="station">station</label>
+        <select id="station" name="station">
+          <% for(let i=0; i<stations.length; i++) { %>
+            <option value="<%= stations[i]._id %>">
+              <%= stations[i].location %>
+            </option>
+            <% } %>
+        </select>
+        <select id="vehicle" name="vehicle">
+          <% for(let i=0; i<vehicles.length; i++) { %>
+            <option value="<%= vehicles[i]._id %>">
+              <%= vehicles[i].licensePlate %>
+            </option>
+            <% } %>
+        </select>
+
+        <input type="submit" value="Assign">
+      </form>
+      <hr>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>

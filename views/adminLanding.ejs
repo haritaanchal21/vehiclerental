@@ -10,8 +10,16 @@
       <a class="btn btn-dark btn-lg" href="/station" role="button">Create Station</a>
       <br>
       <br>
-      <a class="btn btn-light btn-lg" href="/assignstation" role="button">Assign Station</a>
+      <a class="btn btn-light btn-lg" href="/station/assign" role="button">Assign Station</a>
       <a class="btn btn-dark btn-lg" href="/station/list" role="button">Get Station</a>
+      <% for(let i=0; i<inventory.length; i++) { %>
+        <p>
+          <%= inventory[i].station.location %>
+          <%= inventory[i].vehicle.licensePlate %>
+          <%= inventory[i].available ? 'yes' : 'no' %>
+        </p>
+        <br>
+        <% } %>
     </div>
   </div>
 

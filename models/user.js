@@ -3,13 +3,11 @@ var mongoose = require("mongoose");
 
 var Schema = mongoose.Schema;
 
-const UserSchema = new mongoose.Schema({
-    phoneNumber: String,
-    name: String,
-    email: String,
-    isVerified: { type: Boolean, default: false },
-    otp: Number
+const userSchema = new mongoose.Schema({
+    phone: String,
+    password: String,
+    role: Number
 });
 
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;
