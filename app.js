@@ -201,8 +201,16 @@ app.post("/inventory", async (req, res) => {
 
 app.get("/station/list", async (req, res) => {
     let stations = await mongoose.model("Station").find();
-    const inventory = await mongoose.model("Inventory").find({ available: true }).populate(['station', 'vehicle']);
-    res.render("bookVehicle", { inventory , stations });
+    const inventory = [];
+    const selectedStation = { location: '' };
+    res.render("bookVehicle", { inventory, stations, selectedStation });
+});
+
+app.post("/station/list", async (req, res) => {
+    let stations = await mongoose.model("Station").find();
+    const inventory = await mongoose.model("Inventory").find({ available: true, station: req.body.station }).populate(['station', 'vehicle']);
+    const selectedStation = await mongoose.model("Station").findOne({ _id: req.body.station });
+    res.render("bookVehicle", { inventory, stations, selectedStation });
 });
 
 

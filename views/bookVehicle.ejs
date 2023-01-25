@@ -1,5 +1,4 @@
 <%- include('partials/header') %>
-<% var inventory1=[]; %>
 
 
   <div class="jumbotron centered">
@@ -9,40 +8,35 @@
       <hr>
       <br>
       <br>
-      
-      <div class="row">
-      <div class="col-sm-8">
-        <div class="card">
-          <div class="card-body">
 
-            <form>
-              <div class="form-group">
-                <label for="station">Station</label>
-                <select id="station" name="station" class="form-control">
-                  <% for(let i=0; i<stations.length; i++) { %>
-                    <option value="<%= stations[i]._id %>">
-                      <%= stations[i].location %>
-                    </option>
-                    <% } %>
-                </select>
-              </div>
-              <button onclick="getVehicle()" class="btn btn-dark">Book </button>
+      <div class="row">
+        <div class="col-sm-8">
+          <div class="card">
+            <div class="card-body">
+
+              <form action="/station/list" method="POST">
+                <div class="form-group">
+                  <label for="station">Station</label>
+                  <select id="station" name="station" class="form-control">
+                    <option value="" selected disabled hidden>Choose here</option>
+                    <% for(let i=0; i<stations.length; i++) { %>
+                      <option value="<%= stations[i]._id %>">
+                        <%= stations[i].location %>
+                      </option>
+                      <% } %>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-dark">Book </button>
               </form>
 
+            </div>
           </div>
         </div>
       </div>
-      </div>
-        <%
-	    function getVehicle() {
-		var selectElement = document.querySelector('#station');
-		var output = selectElement.value;
-        inventory1 = inventory.filter((f)=>{ return f.station._id === output});
-        console.log(inventory1);
-	    }
-        %>
 
-      <h2 class="display-3">Available Vehicles</h2>
+
+      <h2 class="display-3">Available Vehicles at station <%=selectedStation.location%>
+      </h2>
       <br>
       <br>
 
@@ -56,22 +50,22 @@
             <th scope="col">QR code</th>
           </tr>
         </thead>
-        <% for(let i=0; i<inventory1.length; i++) { %>
+        <% for(let i=0; i<inventory.length; i++) { %>
           <tr>
             <th scope="row">
               <%=i+1%>
             </th>
             <td>
-              <%= inventory1[i].vehicle.make %>
+              <%= inventory[i].vehicle.make %>
             </td>
             <td>
-              <%= inventory1[i].vehicle.licensePlate %>
+              <%= inventory[i].vehicle.licensePlate %>
             </td>
             <td>
-              <%= inventory1[i].vehicle.model %>
+              <%= inventory[i].vehicle.model %>
             </td>
             <td>
-              <%= inventory1[i].vehicle.qrCode %>
+              <%= inventory[i].vehicle.qrCode %>
             </td>
           </tr>
           <% } %>
@@ -81,23 +75,22 @@
     </div>
   </div>
 
-      <div class="row">
-          <div class="col-sm-8">
-            <div class="card">
-              <div class="card-body">
+  <div class="row">
+    <div class="col-sm-8">
+      <div class="card">
+        <div class="card-body">
 
-              <form action="/vehicle/book" method="POST">
-                          <div class="form-group">
-                            <label for="QR CODE">QR CODE</label>
-                            <input type="text" class="form-control" name="QR_code">
-                            </div>
-                          <button type="submit" class="btn btn-dark">Book </button>
-               </form>
-                    </div>
-                </div>
-          </div>
+          <form action="/vehicle/book" method="POST">
+            <div class="form-group">
+              <label for="QR CODE">QR CODE</label>
+              <input type="text" class="form-control" name="QR_code">
+            </div>
+            <button type="submit" class="btn btn-dark">Get Available Vehicles </button>
+          </form>
+        </div>
       </div>
-      </div>
+    </div>
   </div>
-
-	<%- include('partials/footer') %>
+  </div>
+  </div>
+  <%- include('partials/footer') %>
