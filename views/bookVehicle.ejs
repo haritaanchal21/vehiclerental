@@ -28,13 +28,12 @@
                 </div>
                 <button type="submit" class="btn btn-dark">Book </button>
               </form>
-
+              </div>
             </div>
-          </div>
         </div>
       </div>
 
-
+    <div class="jumbotron centered" style="<%= (selectedStation.location ==="") ? 'display:none;' : 'display:block;' %>">
       <h2 class="display-3">Available Vehicles at station <%=selectedStation.location%>
       </h2>
       <br>
@@ -72,13 +71,6 @@
             <tbody>
             </tbody>
       </table>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-sm-8">
-      <div class="card">
-        <div class="card-body">
 
           <form action="/vehicle/book" method="POST">
             <div class="form-group">
@@ -87,10 +79,8 @@
             </div>
             <button type="submit" class="btn btn-dark">Get Available Vehicles </button>
           </form>
-        </div>
-      </div>
-    </div>
-  </div>
+   </div>
+        
   </div>
   </div>
   <%- include('partials/footer') %>

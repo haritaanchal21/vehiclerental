@@ -207,6 +207,9 @@ app.get("/station/list", async (req, res) => {
 });
 
 app.post("/station/list", async (req, res) => {
+    if (!req.body.station) {
+        res.send('<script>alert("please select an option from the dropdown menu!!!"); window.location.href = "/station/list" </script>')
+    }
     let stations = await mongoose.model("Station").find();
     const inventory = await mongoose.model("Inventory").find({ available: true, station: req.body.station }).populate(['station', 'vehicle']);
     const selectedStation = await mongoose.model("Station").findOne({ _id: req.body.station });
