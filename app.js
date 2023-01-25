@@ -197,6 +197,16 @@ app.post("/inventory", async (req, res) => {
 });
 
 
+
+
+app.get("/station/list", async (req, res) => {
+    let stations = await mongoose.model("Station").find();
+    const inventory = await mongoose.model("Inventory").find({ available: true }).populate(['station', 'vehicle']);
+    res.render("bookVehicle", { inventory , stations });
+});
+
+
+
 const port = 3000;
 app.listen(port, function () {
     console.log("Server is running on Port: " + port);
