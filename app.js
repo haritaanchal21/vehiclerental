@@ -140,6 +140,7 @@ app.post("/vehicle/register", function (req, res) {
             res.send('<script>alert("vehicle already exist, redirecting to vehicle adding page!!!"); window.location.href = "/vehicle";</script>');
         } else {
             const newVehicle = new Vehicle({
+                make: req.body.make,
                 model: req.body.model,
                 licensePlate: req.body.license_Plate,
                 qrCode: req.body.QR_code
@@ -188,7 +189,7 @@ app.post("/inventory", async (req, res) => {
                 res.send('<script>alert("Station limit reached!!!"); window.location.href = "/station/assign" </script>')
             }
         } else {
-            res.send('<script>alert("Station limit reached!!!"); window.location.href = "/station/assign" </script>')
+            res.send('<script>alert("Vehicle already assigned to a station!!!"); window.location.href = "/station/assign" </script>')
         }
     } catch (err) {
         res.status(500).send(err.message);
