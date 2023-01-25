@@ -91,9 +91,9 @@ app.get("/station", function (req, res) {
 app.get("/assignstation", function (req, res) {
     res.render("AssignStation");
 });
-app.get("/getstation", function (req, res) {
-    res.render("getStation");
-});
+//app.get("/getstation", function (req, res) {
+//    res.render("getStation");
+//});
 
 
 
@@ -163,7 +163,7 @@ app.post("/station/register", function (req, res) {
     });
 });
 
-app.post("/station/register", function (req, res) {
+app.post("/vehicle/register", function (req, res) {
     Vehicle.findOne({ licensePlate: req.body.license_Plate }, function (err, foundUser) {
         if (foundUser) {
             res.send('<script>alert("vehicle already exist, redirecting to vehicle adding page!!!"); window.location.href = "/vehicle";</script>');
@@ -184,6 +184,10 @@ app.post("/station/register", function (req, res) {
     });
 });
 
+app.get("/station/list", async (req, res) => {
+    const stations = await mongoose.model("Station").find();
+    res.render("getStation", { stations });
+});
 
 
 const port = 3000;
