@@ -32,59 +32,59 @@
         </div>
       </div>
       <% if (errorMessage) { %>
-                    <div>
-                        <script>alert("<%= errorMessage %>")</script>
-                    </div>
-      <% } %>
-      <div style="<%= (selectedStation.location ==="") ? 'display:none;' : 'display:block;' %>">
-        <h2 class="display-3">Available Vehicles at station <%=selectedStation.location%>
-        </h2>
-        <br>
-        <br>
+        <div>
+          <script>alert("<%= errorMessage %>")</script>
+        </div>
+        <% } %>
+          <div style="<%= (selectedStation.location ==="") ? 'display:none;' : 'display:block;' %>">
+            <h2 class="display-3">Available Vehicles at station <%=selectedStation.location%>
+            </h2>
+            <br>
+            <br>
 
-        <table class="table" id="showVehicle">
-          <thead class="thead-dark">
-            <tr>
-              <th scope="col">Sl No.</th>
-              <th scope="col">Vehicle Type</th>
-              <th scope="col">License</th>
-              <th scope="col">Model</th>
-              <th scope="col">QR code</th>
-            </tr>
-          </thead>
-          <% for(let i=0; i<inventory.length; i++) { %>
-            <tr>
-              <th scope="row">
-                <%=i+1%>
-              </th>
-              <td>
-                <%= inventory[i].vehicle.make %>
-              </td>
-              <td>
-                <%= inventory[i].vehicle.licensePlate %>
-              </td>
-              <td>
-                <%= inventory[i].vehicle.model %>
-              </td>
-              <td>
-                <%= inventory[i].vehicle.qrCode %>
-              </td>
-            </tr>
-            <% } %>
-              <tbody>
-              </tbody>
-        </table>
+            <table class="table" id="showVehicle">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Sl No.</th>
+                  <th scope="col">Vehicle Type</th>
+                  <th scope="col">License</th>
+                  <th scope="col">Model</th>
+                  <th scope="col">QR code</th>
+                </tr>
+              </thead>
+              <% for(let i=0; i<inventory.length; i++) { %>
+                <tr>
+                  <th scope="row">
+                    <%=i+1%>
+                  </th>
+                  <td>
+                    <%= inventory[i].vehicle.make %>
+                  </td>
+                  <td>
+                    <%= inventory[i].vehicle.licensePlate %>
+                  </td>
+                  <td>
+                    <%= inventory[i].vehicle.model %>
+                  </td>
+                  <td>
+                    <%= inventory[i].vehicle.qrCode %>
+                  </td>
+                </tr>
+                <% } %>
+                  <tbody>
+                  </tbody>
+            </table>
 
-        <form action="/vehicle/book" method="POST">
-          <div class="form-group">
-            <input type="text" class="form-control" name="selectedStationId" style="display:none;"
-              value="<%= selectedStation._id %>">
-            <label for="qrCode">QR CODE</label>
-            <input type="text" class="form-control" name="qrCode">
+            <form action="/vehicle/book" method="POST">
+              <div class="form-group">
+                <input type="text" class="form-control" name="selectedStationId" style="display:none;"
+                  value="<%= selectedStation._id %>">
+                <label for="qrCode">QR CODE</label>
+                <input type="text" class="form-control" name="qrCode">
+              </div>
+              <button type="submit" class="btn btn-dark"> Book </button>
+            </form>
           </div>
-          <button type="submit" class="btn btn-dark"> Book </button>
-        </form>
-      </div>
 
     </div>
   </div>
