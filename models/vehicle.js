@@ -7,7 +7,7 @@ const VehicleSchema = new mongoose.Schema({
     make: String,
     model: String,
     licensePlate: String,
-    qrCode: String
+    qrCode: Buffer
 });
 
 

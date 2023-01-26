@@ -7,6 +7,9 @@ const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
 const session = require('express-session');
 const flash = require('connect-flash');
+const multer = require('multer');
+const qrcode = require('qrcode');
+const qrcodeR = require('qrcode-reader');
 
 //const MongoStore = require('connect-mongo');
 
@@ -15,6 +18,8 @@ const flash = require('connect-flash');
 
 
 const app = express();
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 app.use(express.static("public"));
 app.use(flash());
@@ -89,7 +94,7 @@ app.post("/register", function (req, res) {
         if (foundUser) {
             req.session.errorMessage = "User already exist!!! redirecting to login";
             return res.redirect('/login');
-        } else {
+            } else {
             const newUser = new User({
                 phone: req.body.phone,
                 password: req.body.password,
@@ -126,7 +131,7 @@ app.post("/login", function (req, res) {
                 req.session.errorMessage = "Wrong Password";
                 return res.redirect('/login');
 
-                // res.send('<script>alert("Wrong Password"); window.location.href = "/login";</script>');
+               // res.send('<script>alert("Wrong Password"); window.location.href = "/login";</script>');
             }
         } else {
             console.log(err ? err : 'errored');
@@ -170,20 +175,24 @@ app.post("/vehicle/register", function (req, res) {
 
             //res.send('<script>alert(""); window.location.href = "/vehicle";</script>');
         } else {
-            const newVehicle = new Vehicle({
-                make: req.body.make,
-                model: req.body.model,
-                licensePlate: req.body.license_Plate,
-                qrCode: req.body.QR_code
-            });
-            newVehicle.save(function (err) {
-                if (err) {
-                    console.log(err);
-                } else {
-                    req.session.errorMessage = "vehicle successfully added!!!";
-                    return res.redirect('/vehicle');
-                    //res.send('<script>alert(""); window.location.href = "/vehicle" </script>')
-                }
+            qrcode.toDataURL(req.body.license_Plate, (err, url) => {
+                console.log(url)
+                //console.log(qr)
+                const newVehicle = new Vehicle({
+                    make: req.body.make,
+                    model: req.body.model,
+                    licensePlate: req.body.license_Plate,
+                    qrCode: url
+                });
+                newVehicle.save(function (err) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        req.session.errorMessage = "vehicle successfully added!!!";
+                        return res.redirect('/vehicle');
+                        //res.send('<script>alert(""); window.location.href = "/vehicle" </script>')
+                    }
+                });
             });
         }
     });
@@ -278,50 +287,88 @@ app.post("/station/list", async (req, res) => {
     res.render("bookVehicle", { inventory, stations, selectedStation, errorMessage });
 });
 
-app.post("/vehicle/book", async (req, res) => {
-    try {
-        const { qrCode, selectedStationId } = req.body;
-        const vehicleData = await mongoose.model("Vehicle").findOne({ qrCode: qrCode });
-        if (!vehicleData) {
-            req.session.errorMessage = "Vehicle does not exist!!!";
-            return res.redirect('/station/list');
-            //res.status(200).send('<script>alert("Vehicle does not exist!!!"); window.location.href = "/station/list" </script>')
-        }
-        const inventory = await mongoose.model("Inventory").findOne({ station: selectedStationId, vehicle: vehicleData._id });
-        if (!inventory) {
-            req.session.errorMessage = "Inventory does not exist!!!";
-            return res.redirect('/station/list');
-            //res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/station/list" </script>')
-        }
-        if (inventory.available) {
-            console.log(req.session.user.id)
-            console.log(req.session.user.phone)
-            const booking = new Booking({
-                userId: req.session.user.id,
-                vehicleId: vehicleData._id,
-                bookingDate: new Date,
-                bookingStationId: selectedStationId,
-            });
-            booking.save(async (err, bookingData) => {
-                if (bookingData) {
-                    await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: bookingData._id, available: false } });
-                    req.session.errorMessage = "Vehicle booked successfully!!!";
-                    return res.redirect('/booking/list');
-                    //res.send('<script>alert("Vehicle booked successfully!!!"); window.location.href = "/station/list" </script>')
-                } else {
-                    console.log(err);
-                }
-            });
-        } else {
-            req.session.errorMessage = "Vehicle already booked!!!";
-            return res.redirect('/station/list');
+var Jimp = require("jimp");
+// Importing filesystem module
+var fs = require('fs')
+// Importing qrcode-reader module
+var qrCode1 = require('qrcode-reader');
 
-            //.send('<script>alert("Vehicle already booked!!!"); window.location.href = "/station/list" </script>')
-        }
+
+app.post("/vehicle/book", upload.single("file"), async (req, res) => {
+    
+    try {
+
+            let uploadedImage = await new Promise((resolve, reject) => {
+                Jimp.read(req.file.buffer, function (err, image) {
+                    if (err) {
+                        console.error(err);
+                    }
+                    // Creating an instance of qrcode-reader module
+                    let qr = new qrCode1();
+                    qr.callback = function (err, value) {
+                        if (err) reject(err);
+                        resolve(value.result);
+                    };
+                    // Decoding the QR code
+                    qr.decode(image.bitmap);
+                });
+            });
+
+            const { selectedStationId } = req.body;
+            console.log(uploadedImage);
+            let url = await new Promise((resolve, reject) => {
+                qrcode.toDataURL(uploadedImage, (err, url) => {
+                    if (err) reject(err);
+                    resolve(url);
+                });
+            });
+
+            // Find a QR code in the collection that matches the decoded data
+            const vehicleData = await mongoose.model("Vehicle").findOne({
+                qrCode: url
+            });
+            console.log(vehicleData);
+            if (!vehicleData) {
+                req.session.errorMessage = "Vehicle does not exist!!!";
+                return res.redirect('/station/list');
+                //res.status(200).send('<script>alert("Vehicle does not exist!!!"); window.location.href = "/station/list" </script>')
+            }
+            const inventory = await mongoose.model("Inventory").findOne({ station: selectedStationId, vehicle: vehicleData._id });
+            if (!inventory) {
+                req.session.errorMessage = "Inventory does not exist!!!";
+                return res.redirect('/station/list');
+                //res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/station/list" </script>')
+            }
+            if (inventory.available) {
+                console.log(req.session.user.id)
+                console.log(req.session.user.phone)
+                const booking = new Booking({
+                    userId: req.session.user.id,
+                    vehicleId: vehicleData._id,
+                    bookingDate: new Date,
+                    bookingStationId: selectedStationId,
+                });
+                booking.save(async (err, bookingData) => {
+                    if (bookingData) {
+                        await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: bookingData._id, available: false } });
+                        req.session.errorMessage = "Vehicle booked successfully!!!";
+                        return res.redirect('/booking/list');
+                        //res.send('<script>alert("Vehicle booked successfully!!!"); window.location.href = "/station/list" </script>')
+                    } else {
+                        console.log(err);
+                    }
+                });
+            } else {
+                req.session.errorMessage = "Vehicle already booked!!!";
+                return res.redirect('/station/list');
+
+                //.send('<script>alert("Vehicle already booked!!!"); window.location.href = "/station/list" </script>')
+            }
     } catch (err) {
         res.status(500).send(err.message);
     }
 });
+
 
 app.post("/booking/return", async (req, res) => {
     try {

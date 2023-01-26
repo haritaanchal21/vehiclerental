@@ -67,7 +67,7 @@
                     <%= inventory[i].vehicle.model %>
                   </td>
                   <td>
-                    <%= inventory[i].vehicle.qrCode %>
+                  <img id="qrCode" src="<%= inventory[i].vehicle.qrCode %>">
                   </td>
                 </tr>
                 <% } %>
@@ -75,15 +75,16 @@
                   </tbody>
             </table>
 
-            <form action="/vehicle/book" method="POST">
+            <form action="/vehicle/book" method="POST" enctype="multipart/form-data">
               <div class="form-group">
                 <input type="text" class="form-control" name="selectedStationId" style="display:none;"
                   value="<%= selectedStation._id %>">
                 <label for="qrCode">QR CODE</label>
-                <input type="text" class="form-control" name="qrCode">
-              </div>
+                    <input type="file" name="file">
               <button type="submit" class="btn btn-dark"> Book </button>
             </form>
+            </div>
+            
           </div>
 
     </div>
