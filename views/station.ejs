@@ -9,6 +9,12 @@
           <div class="card-body">
 
             <!-- Makes POST request to /login route -->
+            <% if (errorMessage) { %>
+                    <div>
+                        <script>alert("<%= errorMessage %>")</script>
+                    </div>
+            <% } %>
+      
             <form action="/station/register" method="POST">
               <div class="form-group">
                 <label for="Station Name">Station Name</label>

@@ -8,6 +8,12 @@
         <div class="card">
           <div class="card-body">
 
+            <% if (errorMessage) { %>
+                    <div>
+                        <script>alert("<%= errorMessage %>")</script>
+                    </div>
+            <% } %>
+      
             <!-- Makes POST request to /login route -->
             <form action="/vehicle/register" method="POST">
               <div class="form-group">

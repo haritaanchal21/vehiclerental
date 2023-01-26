@@ -57,10 +57,14 @@ app.get("/", function (req, res) {
     res.render("home");
 });
 app.get("/login", function (req, res) {
-    res.render("login");
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    res.render("login", { errorMessage });
 });
 app.get("/register", function (req, res) {
-    res.render("register");
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    res.render("register", { errorMessage });
 });
 app.get("/landing", function (req, res) {
     res.render("landing");
@@ -69,21 +73,23 @@ app.get("/adminLanding", function (req, res) {
     res.render("adminLanding");
 });
 app.get("/vehicle", function (req, res) {
-    res.render("vehicle");
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    res.render("vehicle", { errorMessage });
 });
 app.get("/station", function (req, res) {
-    res.render("station");
-});
-app.get("/assignstation", function (req, res) {
-    res.render("AssignStation");
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    res.render("station", { errorMessage });
 });
 
 app.post("/register", function (req, res) {
 
     User.findOne({ phone: req.body.phone }, function (err, foundUser) {
         if (foundUser) {
-            res.send('<script>alert("User already exist, redirecting to login page!!!"); window.location.href = "/login";</script>');
-        } else {
+            req.session.errorMessage = "User already exist!!! redirecting to login";
+            return res.redirect('/login');
+            } else {
             const newUser = new User({
                 phone: req.body.phone,
                 password: req.body.password,
@@ -117,7 +123,10 @@ app.post("/login", function (req, res) {
                     res.render("landing", { inventory });
                 }
             } else {
-                res.send('<script>alert("Wrong Password"); window.location.href = "/login";</script>');
+                req.session.errorMessage = "Wrong Password";
+                return res.redirect('/login');
+
+               // res.send('<script>alert("Wrong Password"); window.location.href = "/login";</script>');
             }
         } else {
             console.log(err ? err : 'errored');
@@ -129,7 +138,10 @@ app.post("/station/register", function (req, res) {
     Station.findOne({ location: req.body.location }, function (err, foundUser) {
         if (foundUser) {
             console.log(foundUser)
-            res.send('<script>alert("station already exist, redirecting to station adding page!!!"); window.location.href = "/station";</script>');
+            req.session.errorMessage = "station already exist, redirecting to station adding page!!!";
+            return res.redirect('/station');
+
+            //res.send('<script>alert("station already exist, redirecting to station adding page!!!"); window.location.href = "/station";</script>');
         } else {
             const newStation = new Station({
                 name: req.body.station_name,
@@ -140,7 +152,10 @@ app.post("/station/register", function (req, res) {
                 if (err) {
                     console.log(err);
                 } else {
-                    res.send('<script>alert("station successfully added!!!"); window.location.href = "/station" </script>')
+                    req.session.errorMessage = "station successfully added!!!";
+                    return res.redirect('/station');
+
+                    //res.send('<script>alert("station successfully added!!!"); window.location.href = "/station" </script>')
                 }
             });
         }
@@ -150,7 +165,10 @@ app.post("/station/register", function (req, res) {
 app.post("/vehicle/register", function (req, res) {
     Vehicle.findOne({ licensePlate: req.body.license_Plate }, function (err, foundUser) {
         if (foundUser) {
-            res.send('<script>alert("vehicle already exist, redirecting to vehicle adding page!!!"); window.location.href = "/vehicle";</script>');
+            req.session.errorMessage = "vehicle already exist, redirecting to vehicle adding page!!!";
+            return res.redirect('/vehicle');
+
+            //res.send('<script>alert(""); window.location.href = "/vehicle";</script>');
         } else {
             const newVehicle = new Vehicle({
                 make: req.body.make,
@@ -162,7 +180,9 @@ app.post("/vehicle/register", function (req, res) {
                 if (err) {
                     console.log(err);
                 } else {
-                    res.send('<script>alert("vehicle successfully added!!!"); window.location.href = "/vehicle" </script>')
+                    req.session.errorMessage = "vehicle successfully added!!!";
+                    return res.redirect('/vehicle');
+                    //res.send('<script>alert(""); window.location.href = "/vehicle" </script>')
                 }
             });
         }
@@ -170,9 +190,11 @@ app.post("/vehicle/register", function (req, res) {
 });
 
 app.get("/station/assign", async (req, res) => {
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
     let stations = await mongoose.model("Station").find();
     let vehicles = await mongoose.model("Vehicle").find();
-    res.render("assign", { stations, vehicles });
+    res.render("assign", { stations, vehicles, errorMessage });
 });
 
 app.post("/inventory", async (req, res) => {
@@ -195,14 +217,21 @@ app.post("/inventory", async (req, res) => {
                     if (err) {
                         console.log(err);
                     } else {
-                        res.send('<script>alert("inventory successfully added!!!"); window.location.href = "/station/assign" </script>')
+                        req.session.errorMessage = "inventory successfully added!!!";
+                        return res.redirect('/station/assign');
+
+                        //res.send('<script>alert(""); window.location.href = "/station/assign" </script>')
                     }
                 });
             } else {
-                res.send('<script>alert("Station limit reached!!!"); window.location.href = "/station/assign" </script>')
+                req.session.errorMessage = "Station limit reached!!!";
+                return res.redirect('/station/assign');
+                //res.send('<script>alert(""); window.location.href = "/station/assign" </script>')
             }
         } else {
-            res.send('<script>alert("Vehicle already assigned to a station!!!"); window.location.href = "/station/assign" </script>')
+            req.session.errorMessage = "Vehicle already assigned to a station!!!";
+            return res.redirect('/station/assign');
+            //res.send('<script>alert("Vehicle already assigned to a station!!!"); window.location.href = "/station/assign" </script>')
         }
     } catch (err) {
         res.status(500).send(err.message);
