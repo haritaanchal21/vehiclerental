@@ -82,6 +82,37 @@ app.get("/station", function (req, res) {
     req.session.errorMessage = null;
     res.render("station", { errorMessage });
 });
+app.get("/station/list", async (req, res) => {
+    let errorMessage = req.session.errorMessage;
+    console.log(errorMessage)
+    req.session.errorMessage = null;
+    let stations = await mongoose.model("Station").find();
+    const inventory = [];
+    const selectedStation = { location: "" };
+    res.render("bookVehicle", { inventory, stations, selectedStation, errorMessage });
+});
+app.get("/booking/list", async (req, res) => {
+    let stations = await mongoose.model("Station").find();
+    let whereFilter = {};
+    if (req.session.user.role !== 1) {
+        whereFilter['userId'] = req.session.user.id;
+    }
+    let booking = await mongoose.model("Booking").find(whereFilter).populate(['userId', 'returnStationId', 'bookingStationId', 'vehicleId']);
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    res.render("bookingList", { booking, stations, errorMessage });
+});
+app.get("/logout", async (req, res) => {
+    req.session.destroy();
+    res.redirect("login");
+});
+app.get("/station/assign", async (req, res) => {
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    let stations = await mongoose.model("Station").find();
+    let vehicles = await mongoose.model("Vehicle").find();
+    res.render("assign", { stations, vehicles, errorMessage });
+});
 
 app.post("/register", function (req, res) {
 
@@ -189,14 +220,6 @@ app.post("/vehicle/register", function (req, res) {
     });
 });
 
-app.get("/station/assign", async (req, res) => {
-    let errorMessage = req.session.errorMessage;
-    req.session.errorMessage = null;
-    let stations = await mongoose.model("Station").find();
-    let vehicles = await mongoose.model("Vehicle").find();
-    res.render("assign", { stations, vehicles, errorMessage });
-});
-
 app.post("/inventory", async (req, res) => {
     try {
         const { vehicle, station } = req.body;
@@ -238,32 +261,6 @@ app.post("/inventory", async (req, res) => {
     }
 });
 
-app.get("/station/list", async (req, res) => {
-    let errorMessage = req.session.errorMessage;
-    console.log(errorMessage)
-    req.session.errorMessage = null;
-    let stations = await mongoose.model("Station").find();
-    const inventory = [];
-    const selectedStation = { location: "" };
-    res.render("bookVehicle", { inventory, stations, selectedStation, errorMessage });
-});
-
-app.get("/booking/list", async (req, res) => {
-    let stations = await mongoose.model("Station").find();
-    let whereFilter = {};
-    if (req.session.user.role !== 1) {
-        whereFilter['userId'] = req.session.user.id;
-    }
-    let booking = await mongoose.model("Booking").find(whereFilter).populate(['userId', 'returnStationId', 'bookingStationId', 'vehicleId']);
-    let errorMessage = req.session.errorMessage;
-    req.session.errorMessage = null;
-    res.render("bookingList", { booking, stations, errorMessage });
-});
-
-app.get("/logout", async (req, res) => {
-    req.session.destroy();
-    res.redirect("login");
-});
 app.post("/station/list", async (req, res) => {
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;
