@@ -5,19 +5,25 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
+const session = require('express-session');
+const flash = require('connect-flash');
+
+//const MongoStore = require('connect-mongo');
+
+
 //const { router } = require("./routes/index");
 
 
 const app = express();
 
 app.use(express.static("public"));
+app.use(flash());
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 
 var uri = "mongodb://127.0.0.1:27017/details";
-
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
     if (err) {
@@ -30,6 +36,14 @@ mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }, (err)
 mongoose.connection.on('connected', () => {
     console.log('Mongoose default connection open');
 });
+
+app.use(session({
+    secret: 'mysecret',
+    resave: false,
+    saveUninitialized: false,
+    //store: MongoStore.create({ mongooseConnection: mongoose.connection })
+}));
+
 
 //userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
@@ -94,6 +108,9 @@ app.post("/login", function (req, res) {
         if (foundUser) {
             const inventory = await mongoose.model("Inventory").find().populate(['station', 'vehicle']);
             if (foundUser.password === password) {
+                if (!req.session.user) {
+                    req.session.user = { phone: phone, id: foundUser._id };
+                    }
                 if (foundUser.role === 1) {
                     res.render("adminLanding", { inventory });
                 } else {
@@ -195,7 +212,7 @@ app.post("/inventory", async (req, res) => {
 app.get("/station/list", async (req, res) => {
     let stations = await mongoose.model("Station").find();
     const inventory = [];
-    const selectedStation = { location: '' };
+    const selectedStation = { location: ""};
     res.render("bookVehicle", { inventory, stations, selectedStation });
 });
 
@@ -214,15 +231,20 @@ app.post("/vehicle/book", async (req, res) => {
         const { qrCode, selectedStationId } = req.body;
         const vehicleData = await mongoose.model("Vehicle").findOne({ qrCode: qrCode });
         if (!vehicleData) {
-            res.send('<script>alert("Vehicle does not exist!!!"); window.location.href = "/station/list" </script>')
+            req.session.error = "Vehicle does not exist!!!";
+            //await req.flash('error', 'Invalid input');
+            //return res.redirect('/station/list');
+            res.status(200).send('<script>alert("Vehicle does not exist!!!"); window.location.href = "/station/list" </script>')
         }
         const inventory = await mongoose.model("Inventory").findOne({ station: selectedStationId, vehicle: vehicleData._id });
         if (!inventory) {
             res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/station/list" </script>')
         }
-        if (inventory.available) {
+        if (inventory.available) { 
+            console.log(req.session.user.id)
+            console.log(req.session.user.phone)
             const booking = new Booking({
-                userId: '63d15f283956359ab4e8f397',
+                userId: req.session.user.id,
                 vehicleId: vehicleData._id,
                 bookingDate: new Date,
                 bookingStationId: selectedStationId,
