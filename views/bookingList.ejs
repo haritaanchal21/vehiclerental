@@ -1,0 +1,78 @@
+<%- include('partials/header') %>
+
+
+  <div class="jumbotron centered">
+    <div class="container">
+      <div>
+        <h1 class="display-3">Your booking history</h1>
+        <br>
+        <br>
+
+        <table class="table" id="showVehicle">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">Sl No.</th>
+              <th scope="col">Vehicle License</th>
+              <th scope="col">Booking Station</th>
+              <th scope="col">Booking Date</th>
+              <th scope="col">Returned Station</th>
+              <th scope="col">Return Date</th>
+              <th scope="col">Is Returned</th>
+            </tr>
+          </thead>
+          <% for(let i=0; i<booking.length; i++) { %>
+            <tr>
+              <th scope="row">
+                <%=i+1%>
+              </th>
+              <td>
+                <%= booking[i].vehicleId.licensePlate %>
+              </td>
+              <td>
+                <%= booking[i].bookingStationId.location %>
+              </td>
+              <td>
+                <%= booking[i].bookingDate %>
+              </td>
+              <td>
+                <%= booking[i].returnStationId && booking[i].returnStationId.location ?
+                  booking[i].returnStationId.location : 'NA' %>
+              </td>
+              <td>
+                <%= booking[i].returningDate ? booking[i].returningDate : 'c' %>
+              </td>
+              <td>
+                <%= booking[i].isReturned %>
+              </td>
+            </tr>
+            <% } %>
+              <tbody>
+              </tbody>
+        </table>
+
+        <form action="/booking/return" method="POST">
+          <div class="form-group">
+            <label for="bookingId">Booking</label>
+            <select id="bookingId" name="bookingId" class="form-control">
+              <% for(let i=0; i<booking.length; i++) { %>
+                <option value="<%= booking[i]._id %>">
+                  <%= booking[i].vehicleId.licensePlate %>
+                </option>
+                <% } %>
+            </select>
+            <label for="returnStationId">Returning station</label>
+            <select id="returnStationId" name="returnStationId" class="form-control">
+              <% for(let i=0; i<stations.length; i++) { %>
+                <option value="<%= stations[i]._id %>">
+                  <%= stations[i].location %>
+                </option>
+                <% } %>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-dark"> Return Vehicle </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+  <%- include('partials/footer') %>

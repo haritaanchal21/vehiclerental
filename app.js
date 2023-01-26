@@ -116,7 +116,7 @@ app.post("/login", function (req, res) {
             if (foundUser.password === password) {
                 if (!req.session.user) {
                     req.session.user = { phone: phone, id: foundUser._id, errorMessage: '' };
-                    }
+                }
                 if (foundUser.role === 1) {
                     res.render("adminLanding", { inventory });
                 } else {
@@ -244,8 +244,16 @@ app.get("/station/list", async (req, res) => {
     req.session.errorMessage = null;
     let stations = await mongoose.model("Station").find();
     const inventory = [];
-    const selectedStation = { location: ""};
+    const selectedStation = { location: "" };
     res.render("bookVehicle", { inventory, stations, selectedStation, errorMessage });
+});
+
+app.get("/booking/list", async (req, res) => {
+    let stations = await mongoose.model("Station").find();
+    let booking = await mongoose.model("Booking").find({ userId: req.session.user.id }).populate(['userId', 'returnStationId', 'bookingStationId', 'vehicleId']);
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    res.render("bookingList", { booking, stations, errorMessage });
 });
 
 app.post("/station/list", async (req, res) => {
@@ -277,7 +285,7 @@ app.post("/vehicle/book", async (req, res) => {
             return res.redirect('/station/list');
             //res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/station/list" </script>')
         }
-        if (inventory.available) { 
+        if (inventory.available) {
             console.log(req.session.user.id)
             console.log(req.session.user.phone)
             const booking = new Booking({
@@ -290,7 +298,7 @@ app.post("/vehicle/book", async (req, res) => {
                 if (bookingData) {
                     await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: bookingData._id, available: false } });
                     req.session.errorMessage = "Vehicle booked successfully!!!";
-                    return res.redirect('/station/list');
+                    return res.redirect('/booking/list');
                     //res.send('<script>alert("Vehicle booked successfully!!!"); window.location.href = "/station/list" </script>')
                 } else {
                     console.log(err);
@@ -302,6 +310,24 @@ app.post("/vehicle/book", async (req, res) => {
 
             //.send('<script>alert("Vehicle already booked!!!"); window.location.href = "/station/list" </script>')
         }
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.post("/booking/return", async (req, res) => {
+    try {
+        const { bookingId, returnStationId } = req.body;
+        if (!bookingId) {
+            res.send('<script>alert("Booking not found!!!"); window.location.href = "/booking/list" </script>')
+        }
+        const inventory = await mongoose.model("Inventory").findOne({ booking: bookingId });
+        if (!inventory) {
+            res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/booking/list" </script>')
+        }
+        await Booking.updateOne({ _id: bookingId }, { $set: { returnDate: new Date, returnStationId: returnStationId, isReturned: true } });
+        await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: null, station: returnStationId, available: true } });
+        return res.redirect('/booking/list');
     } catch (err) {
         res.status(500).send(err.message);
     }
