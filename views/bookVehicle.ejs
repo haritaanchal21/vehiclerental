@@ -31,7 +31,11 @@
           </div>
         </div>
       </div>
-
+      <% if (errorMessage) { %>
+                    <div>
+                        <script>alert("<%= errorMessage %>")</script>
+                    </div>
+      <% } %>
       <div style="<%= (selectedStation.location ==="") ? 'display:none;' : 'display:block;' %>">
         <h2 class="display-3">Available Vehicles at station <%=selectedStation.location%>
         </h2>
