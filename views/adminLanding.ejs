@@ -10,45 +10,45 @@
       <br>
       <br>
       <a class="btn btn-light btn-lg" href="/station/assign" role="button">Assign Station</a>
-      <a class="btn btn-dark btn-lg" href="/station/list" role="button">Get Station</a>
+      <a class="btn btn-dark btn-lg" href="/station/list" role="button">Book Vehicle</a>
       <br>
       <br>
       <h2 class="display-3">Inventory</h2>
       <br>
       <br>
       <div class="jumbotron centered">
-      <table class="table">
-        <thead class="thead-dark">
-          <tr>
-            <th scope="col">Sl No.</th>
-            <th scope="col">Vehicle Type</th>
-            <th scope="col">Vehicle License</th>
-            <th scope="col">Station Location</th>
-            <th scope="col">Is Available</th>
-          </tr>
-        </thead>
-        <% for(let i=0; i<inventory.length; i++) { %>
-          <tr>
-            <th scope="row">
-              <%=i+1%>
-            </th>
-            <td>
-              <%= inventory[i].vehicle.make %>
-            </td>
-            <td>
-              <%= inventory[i].vehicle.licensePlate %>
-            </td>
-            <td>
-              <%= inventory[i].station.location %>
-            </td>
-            <td>
-              <%= inventory[i].available ? 'yes' : 'no' %>
-            </td>
-          </tr>
-          <% } %>
-            <tbody>
-            </tbody>
-      </table>
+        <table class="table">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">Sl No.</th>
+              <th scope="col">Vehicle Type</th>
+              <th scope="col">Vehicle License</th>
+              <th scope="col">Station Location</th>
+              <th scope="col">Is Available</th>
+            </tr>
+          </thead>
+          <% for(let i=0; i<inventory.length; i++) { %>
+            <tr>
+              <th scope="row">
+                <%=i+1%>
+              </th>
+              <td>
+                <%= inventory[i].vehicle.make %>
+              </td>
+              <td>
+                <%= inventory[i].vehicle.licensePlate %>
+              </td>
+              <td>
+                <%= inventory[i].station.location %>
+              </td>
+              <td>
+                <%= inventory[i].available ? 'yes' : 'no' %>
+              </td>
+            </tr>
+            <% } %>
+              <tbody>
+              </tbody>
+        </table>
       </div>
     </div>
   </div>

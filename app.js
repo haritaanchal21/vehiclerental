@@ -37,6 +37,7 @@ const User = require("./models/user");
 const Vehicle = require("./models/vehicle");
 const Station = require("./models/station");
 const Inventory = require("./models/inventory");
+const Booking = require("./models/booking");
 
 app.get("/", function (req, res) {
     res.render("home");
@@ -44,11 +45,9 @@ app.get("/", function (req, res) {
 app.get("/login", function (req, res) {
     res.render("login");
 });
-
 app.get("/register", function (req, res) {
     res.render("register");
 });
-
 app.get("/landing", function (req, res) {
     res.render("landing");
 });
@@ -64,8 +63,6 @@ app.get("/station", function (req, res) {
 app.get("/assignstation", function (req, res) {
     res.render("AssignStation");
 });
-
-
 
 app.post("/register", function (req, res) {
 
@@ -110,7 +107,6 @@ app.post("/login", function (req, res) {
         }
     });
 });
-
 
 app.post("/station/register", function (req, res) {
     Station.findOne({ location: req.body.location }, function (err, foundUser) {
@@ -196,9 +192,6 @@ app.post("/inventory", async (req, res) => {
     }
 });
 
-
-
-
 app.get("/station/list", async (req, res) => {
     let stations = await mongoose.model("Station").find();
     const inventory = [];
@@ -216,7 +209,39 @@ app.post("/station/list", async (req, res) => {
     res.render("bookVehicle", { inventory, stations, selectedStation });
 });
 
-
+app.post("/vehicle/book", async (req, res) => {
+    try {
+        const { qrCode, selectedStationId } = req.body;
+        const vehicleData = await mongoose.model("Vehicle").findOne({ qrCode: qrCode });
+        if (!vehicleData) {
+            res.send('<script>alert("Vehicle does not exist!!!"); window.location.href = "/station/list" </script>')
+        }
+        const inventory = await mongoose.model("Inventory").findOne({ station: selectedStationId, vehicle: vehicleData._id });
+        if (!inventory) {
+            res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/station/list" </script>')
+        }
+        if (inventory.available) {
+            const booking = new Booking({
+                userId: '63d15f283956359ab4e8f397',
+                vehicleId: vehicleData._id,
+                bookingDate: new Date,
+                bookingStationId: selectedStationId,
+            });
+            booking.save(async (err, bookingData) => {
+                if (bookingData) {
+                    await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: bookingData._id, available: false } });
+                    res.send('<script>alert("Vehicle booked successfully!!!"); window.location.href = "/station/list" </script>')
+                } else {
+                    console.log(err);
+                }
+            });
+        } else {
+            res.send('<script>alert("Vehicle already booked!!!"); window.location.href = "/station/list" </script>')
+        }
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
 
 const port = 3000;
 app.listen(port, function () {
