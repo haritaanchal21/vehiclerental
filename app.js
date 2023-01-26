@@ -87,6 +87,37 @@ app.get("/station", function (req, res) {
     req.session.errorMessage = null;
     res.render("station", { errorMessage });
 });
+app.get("/station/list", async (req, res) => {
+    let errorMessage = req.session.errorMessage;
+    console.log(errorMessage)
+    req.session.errorMessage = null;
+    let stations = await mongoose.model("Station").find();
+    const inventory = [];
+    const selectedStation = { location: "" };
+    res.render("bookVehicle", { inventory, stations, selectedStation, errorMessage });
+});
+app.get("/booking/list", async (req, res) => {
+    let stations = await mongoose.model("Station").find();
+    let whereFilter = {};
+    if (req.session.user.role !== 1) {
+        whereFilter['userId'] = req.session.user.id;
+    }
+    let booking = await mongoose.model("Booking").find(whereFilter).populate(['userId', 'returnStationId', 'bookingStationId', 'vehicleId']);
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    res.render("bookingList", { booking, stations, errorMessage });
+});
+app.get("/logout", async (req, res) => {
+    req.session.destroy();
+    res.redirect("login");
+});
+app.get("/station/assign", async (req, res) => {
+    let errorMessage = req.session.errorMessage;
+    req.session.errorMessage = null;
+    let stations = await mongoose.model("Station").find();
+    let vehicles = await mongoose.model("Vehicle").find();
+    res.render("assign", { stations, vehicles, errorMessage });
+});
 
 app.post("/register", function (req, res) {
 
@@ -104,6 +135,9 @@ app.post("/register", function (req, res) {
                 if (err) {
                     console.log(err);
                 } else {
+                    if (!req.session.user) {
+                        req.session.user = { phone: req.body.phone, id: newUser._id, errorMessage: '', role: newUser.role };
+                    }
                     res.redirect("landing");
                 }
             });
@@ -198,14 +232,6 @@ app.post("/vehicle/register", function (req, res) {
     });
 });
 
-app.get("/station/assign", async (req, res) => {
-    let errorMessage = req.session.errorMessage;
-    req.session.errorMessage = null;
-    let stations = await mongoose.model("Station").find();
-    let vehicles = await mongoose.model("Vehicle").find();
-    res.render("assign", { stations, vehicles, errorMessage });
-});
-
 app.post("/inventory", async (req, res) => {
     try {
         const { vehicle, station } = req.body;
@@ -247,32 +273,6 @@ app.post("/inventory", async (req, res) => {
     }
 });
 
-app.get("/station/list", async (req, res) => {
-    let errorMessage = req.session.errorMessage;
-    console.log(errorMessage)
-    req.session.errorMessage = null;
-    let stations = await mongoose.model("Station").find();
-    const inventory = [];
-    const selectedStation = { location: "" };
-    res.render("bookVehicle", { inventory, stations, selectedStation, errorMessage });
-});
-
-app.get("/booking/list", async (req, res) => {
-    let stations = await mongoose.model("Station").find();
-    let whereFilter = {};
-    if (req.session.user.role !== 1) {
-        whereFilter['userId'] = req.session.user.id;
-    }
-    let booking = await mongoose.model("Booking").find(whereFilter).populate(['userId', 'returnStationId', 'bookingStationId', 'vehicleId']);
-    let errorMessage = req.session.errorMessage;
-    req.session.errorMessage = null;
-    res.render("bookingList", { booking, stations, errorMessage });
-});
-
-app.get("/logout", async (req, res) => {
-    req.session.destroy();
-    res.redirect("login");
-});
 app.post("/station/list", async (req, res) => {
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;
@@ -380,8 +380,14 @@ app.post("/booking/return", async (req, res) => {
         if (!inventory) {
             res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/booking/list" </script>')
         }
-        await Booking.updateOne({ _id: bookingId }, { $set: { returnDate: new Date, returnStationId: returnStationId, isReturned: true } });
-        await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: null, station: returnStationId, available: true } });
+        let vehicleCount = await mongoose.model("Inventory").countDocuments({ station: returnStationId });
+        let stationData = await Station.findOne({ _id: returnStationId });
+        if (stationData.capacity <= vehicleCount) {
+            res.send('<script>alert("Station fully occupied, please return through some other station !!!"); window.location.href = "/booking/list" </script>')
+        } else {
+            await Booking.updateOne({ _id: bookingId }, { $set: { returnDate: new Date, returnStationId: returnStationId, isReturned: true } });
+            await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: null, station: returnStationId, available: true } });
+        }
         return res.redirect('/booking/list');
     } catch (err) {
         res.status(500).send(err.message);
