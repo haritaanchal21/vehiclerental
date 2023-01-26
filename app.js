@@ -130,6 +130,9 @@ app.post("/register", function (req, res) {
                 if (err) {
                     console.log(err);
                 } else {
+                    if (!req.session.user) {
+                        req.session.user = { phone: req.body.phone, id: newUser._id, errorMessage: '', role: newUser.role };
+                    }
                     res.redirect("landing");
                 }
             });
@@ -330,8 +333,14 @@ app.post("/booking/return", async (req, res) => {
         if (!inventory) {
             res.send('<script>alert("Inventory does not exist!!!"); window.location.href = "/booking/list" </script>')
         }
-        await Booking.updateOne({ _id: bookingId }, { $set: { returnDate: new Date, returnStationId: returnStationId, isReturned: true } });
-        await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: null, station: returnStationId, available: true } });
+        let vehicleCount = await mongoose.model("Inventory").countDocuments({ station: returnStationId });
+        let stationData = await Station.findOne({ _id: returnStationId });
+        if (stationData.capacity <= vehicleCount) {
+            res.send('<script>alert("Station fully occupied, please return through some other station !!!"); window.location.href = "/booking/list" </script>')
+        } else {
+            await Booking.updateOne({ _id: bookingId }, { $set: { returnDate: new Date, returnStationId: returnStationId, isReturned: true } });
+            await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: null, station: returnStationId, available: true } });
+        }
         return res.redirect('/booking/list');
     } catch (err) {
         res.status(500).send(err.message);
