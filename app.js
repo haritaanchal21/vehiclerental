@@ -298,6 +298,7 @@ app.post("/booking/return", async (req, res) => {
         }
         await Booking.updateOne({ _id: bookingId }, { $set: { returnDate: new Date, returnStationId: returnStationId, isReturned: true } });
         await Inventory.updateOne({ _id: inventory._id }, { $set: { booking: null, station: returnStationId, available: true } });
+        return res.redirect('/booking/list');
     } catch (err) {
         res.status(500).send(err.message);
     }
