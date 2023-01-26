@@ -1,5 +1,5 @@
 <%- include('partials/header') %>
-
+  <a class="btn btn-dark btn-lg" href="/logout" role="button">Logout</a>
 
   <div class="jumbotron centered">
     <div class="container">
@@ -32,14 +32,14 @@
                 <%= booking[i].bookingStationId.location %>
               </td>
               <td>
-                <%= booking[i].bookingDate %>
+                <%= booking[i].bookingDate.toDateString() %>
               </td>
               <td>
                 <%= booking[i].returnStationId && booking[i].returnStationId.location ?
                   booking[i].returnStationId.location : 'NA' %>
               </td>
               <td>
-                <%= booking[i].returningDate ? booking[i].returningDate : 'c' %>
+                <%= booking[i].returnDate ? booking[i].returnDate.toDateString() : 'NA' %>
               </td>
               <td>
                 <%= booking[i].isReturned %>
@@ -54,11 +54,11 @@
           <div class="form-group">
             <label for="bookingId">Booking</label>
             <select id="bookingId" name="bookingId" class="form-control">
-              <% for(let i=0; i<booking.length; i++) { %>
-                <option value="<%= booking[i]._id %>">
-                  <%= booking[i].vehicleId.licensePlate %>
-                </option>
-                <% } %>
+              <% booking=booking.filter(b=> !b.isReturned); for(let i=0; i<booking.length; i++) {%>
+                  <option value="<%= booking[i]._id %>">
+                    <%= booking[i].vehicleId.licensePlate %>
+                  </option>
+                  <% } %>
             </select>
             <label for="returnStationId">Returning station</label>
             <select id="returnStationId" name="returnStationId" class="form-control">

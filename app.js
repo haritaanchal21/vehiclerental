@@ -89,7 +89,7 @@ app.post("/register", function (req, res) {
         if (foundUser) {
             req.session.errorMessage = "User already exist!!! redirecting to login";
             return res.redirect('/login');
-            } else {
+        } else {
             const newUser = new User({
                 phone: req.body.phone,
                 password: req.body.password,
@@ -115,7 +115,7 @@ app.post("/login", function (req, res) {
             const inventory = await mongoose.model("Inventory").find().populate(['station', 'vehicle']);
             if (foundUser.password === password) {
                 if (!req.session.user) {
-                    req.session.user = { phone: phone, id: foundUser._id, errorMessage: '' };
+                    req.session.user = { phone: phone, id: foundUser._id, errorMessage: '', role: foundUser.role };
                 }
                 if (foundUser.role === 1) {
                     res.render("adminLanding", { inventory });
@@ -126,7 +126,7 @@ app.post("/login", function (req, res) {
                 req.session.errorMessage = "Wrong Password";
                 return res.redirect('/login');
 
-               // res.send('<script>alert("Wrong Password"); window.location.href = "/login";</script>');
+                // res.send('<script>alert("Wrong Password"); window.location.href = "/login";</script>');
             }
         } else {
             console.log(err ? err : 'errored');
@@ -250,12 +250,20 @@ app.get("/station/list", async (req, res) => {
 
 app.get("/booking/list", async (req, res) => {
     let stations = await mongoose.model("Station").find();
-    let booking = await mongoose.model("Booking").find({ userId: req.session.user.id }).populate(['userId', 'returnStationId', 'bookingStationId', 'vehicleId']);
+    let whereFilter = {};
+    if (req.session.user.role !== 1) {
+        whereFilter['userId'] = req.session.user.id;
+    }
+    let booking = await mongoose.model("Booking").find(whereFilter).populate(['userId', 'returnStationId', 'bookingStationId', 'vehicleId']);
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;
     res.render("bookingList", { booking, stations, errorMessage });
 });
 
+app.get("/logout", async (req, res) => {
+    req.session.destroy();
+    res.redirect("login");
+});
 app.post("/station/list", async (req, res) => {
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;

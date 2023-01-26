@@ -1,4 +1,5 @@
 <%- include('partials/header') %>
+  <a class="btn btn-dark btn-lg" href="/logout" role="button">Logout</a>
 
   <div class="container mt-5">
     <h1>Create Vehicle</h1>
@@ -9,35 +10,35 @@
           <div class="card-body">
 
             <% if (errorMessage) { %>
-                    <div>
-                        <script>alert("<%= errorMessage %>")</script>
-                    </div>
-            <% } %>
-      
-            <!-- Makes POST request to /login route -->
-            <form action="/vehicle/register" method="POST">
-              <div class="form-group">
-                <label for="Vehicle Type">Vehicle Type</label>
-                <select name="make" class="form-control">
-                  <option value="Scooty" selected>Scooty</option>
-                  <option value="Car">Car</option>
-                  <option value="Bike">Bike</option>
-                </select>
+              <div>
+                <script>alert("<%= errorMessage %>")</script>
               </div>
-              <div class="form-group">
-                <label for="model">Model</label>
-                <input type="text" class="form-control" name="model">
-              </div>
-              <div class="form-group">
-                <label for="License Plate">License Plate</label>
-                <input type="text" class="form-control" name="license_Plate">
-              </div>
-              <div class="form-group">
-                <label for="QR code">QR code</label>
-                <input type="text" class="form-control" name="QR_code">
-              </div>
-              <button type="submit" class="btn btn-dark">Create Vehicle</button>
-            </form>
+              <% } %>
+
+                <!-- Makes POST request to /login route -->
+                <form action="/vehicle/register" method="POST">
+                  <div class="form-group">
+                    <label for="Vehicle Type">Vehicle Type</label>
+                    <select name="make" class="form-control">
+                      <option value="Scooty" selected>Scooty</option>
+                      <option value="Car">Car</option>
+                      <option value="Bike">Bike</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" class="form-control" name="model">
+                  </div>
+                  <div class="form-group">
+                    <label for="License Plate">License Plate</label>
+                    <input type="text" class="form-control" name="license_Plate">
+                  </div>
+                  <div class="form-group">
+                    <label for="QR code">QR code</label>
+                    <input type="text" class="form-control" name="QR_code">
+                  </div>
+                  <button type="submit" class="btn btn-dark">Create Vehicle</button>
+                </form>
           </div>
         </div>
       </div>
