@@ -43,7 +43,7 @@
                 <%= booking[i].returnDate ? booking[i].returnDate.toDateString() : 'NA' %>
               </td>
               <td>
-                <%= booking[i].isReturned %>
+                <%= booking[i].isReturned ? 'Yes' : 'No' %>
               </td>
             </tr>
             <% } %>
