@@ -5,7 +5,6 @@ var Schema = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
     phone: String,
-    password: String,
     role: Number
 });
 

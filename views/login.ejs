@@ -15,14 +15,20 @@
       
 
             <!-- Makes POST request to /login route -->
-            <form action="/login" method="POST">
+            <form action="/generateOtp" method="POST">
               <div class="form-group">
                 <label for="phone">Phone number</label>
-                <input type="tel" class="form-control" name="phone" pattern="[0-9]{10}">
+                <input value = "<%=phone ? phone : ''%>" type="tel" class="form-control" name="phone" pattern="[0-9]{10}">
+              </div>
+              <button type="submit" class="btn btn-dark">Generate OTP</button>
+            </form>
+            <form action="/login" method="POST">
+              <div class="form-group">
+                <input value = "<%=phone ? phone : ''%>" type="tel" class="form-control" name="phone" pattern="[0-9]{10}" style="display:none">
               </div>
               <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" class="form-control" name="password">
+                <label for="otp">Enter OTP</label>
+                <input type="otp" class="form-control" name="otp">
               </div>
               <button type="submit" class="btn btn-dark">Login</button>
             </form>
