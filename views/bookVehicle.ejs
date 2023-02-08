@@ -1,7 +1,8 @@
 <%- include('partials/header') %>
   <a class="btn btn-dark btn-lg" href="/logout" role="button">Logout</a>
-  <button class="btn btn-dark btn-lg" onclick="history.back()">Go Back</button>
-
+  <form method="POST" action="/land">
+    <button type="submit" class="btn btn-dark btn-lg">Home</button>
+  </form>
   <div class="jumbotron centered">
     <div class="container">
       <h1 class="display-3">Book your vehicle</h1>
@@ -68,7 +69,7 @@
                     <%= inventory[i].vehicle.model %>
                   </td>
                   <td>
-                  <img id="qrCode" src="<%= inventory[i].vehicle.qrCode %>">
+                    <img id="qrCode" src="<%= inventory[i].vehicle.qrCode %>">
                   </td>
                 </tr>
                 <% } %>
@@ -81,13 +82,13 @@
                 <input type="text" class="form-control" name="selectedStationId" style="display:none;"
                   value="<%= selectedStation._id %>">
                 <label for="qrCode">QR CODE</label>
-                    <input type="file" name="file">
-              <button type="submit" class="btn btn-dark"> Book </button>
+                <input type="file" name="file">
+                <button type="submit" class="btn btn-dark"> Book </button>
             </form>
-            </div>
-            
           </div>
 
     </div>
+
+  </div>
   </div>
   <%- include('partials/footer') %>

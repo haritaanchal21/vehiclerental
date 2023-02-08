@@ -17,12 +17,11 @@ var qrCode1 = require('qrcode-reader');
 //const MongoStore = require('connect-mongo');
 const accountSid = "ACf06fa06dddd719cb7e4a9b79e150dfc1";
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-//const verifySid = "VAeb0e25b50c9bc44ee45ea968005dc27b";
+const verifySid = "VAb16aa86f57f53474d36cc4b67b5490e6";
 const client = require("twilio")(accountSid, authToken);
 const app = express();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-let verifySid;
 
 app.use(express.static("public"));
 app.use(flash());
@@ -61,37 +60,38 @@ const Station = require("./models/station");
 const Inventory = require("./models/inventory");
 const Booking = require("./models/booking");
 
+function checkAuthentication(req, res, next) {
+    if (req.session.user) {
+        next();
+    } else {
+        res.redirect("/login");
+    }
+}
 app.get("/", function (req, res) {
-    client.verify.v2.services
-        .create({ friendlyName: 'OTP for vehicle rental login' })
-        .then(service => {
-            console.log(service.sid);
-            verifySid = service.sid;
-            res.render("home");
-        });
+    res.render("home");
 });
 app.get("/login", function (req, res) {
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;
     res.render("login", { errorMessage, phone: '' });
 });
-app.get("/landing", function (req, res) {
-    res.render("landing");
+app.get("/landing", checkAuthentication, function (req, res) {
+    res.render("landing", { inventory: req.session.user.inventory ? req.session.user.inventory : {} });
 });
-app.get("/adminLanding", function (req, res) {
-    res.render("adminLanding");
+app.get("/adminLanding", checkAuthentication, function (req, res) {
+    res.render("adminLanding", { inventory: req.session.user.inventory ? req.session.user.inventory : {} });
 });
-app.get("/vehicle", function (req, res) {
+app.get("/vehicle", checkAuthentication, function (req, res) {
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;
     res.render("vehicle", { errorMessage });
 });
-app.get("/station", function (req, res) {
+app.get("/station", checkAuthentication, function (req, res) {
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;
     res.render("station", { errorMessage });
 });
-app.get("/station/list", async (req, res) => {
+app.get("/station/list", checkAuthentication, async (req, res) => {
     let errorMessage = req.session.errorMessage;
     console.log(errorMessage)
     req.session.errorMessage = null;
@@ -100,7 +100,7 @@ app.get("/station/list", async (req, res) => {
     const selectedStation = { location: "" };
     res.render("bookVehicle", { inventory, stations, selectedStation, errorMessage });
 });
-app.get("/booking/list", async (req, res) => {
+app.get("/booking/list", checkAuthentication, async (req, res) => {
     let stations = await mongoose.model("Station").find();
     let whereFilter = {};
     if (req.session.user.role !== 1) {
@@ -115,7 +115,7 @@ app.get("/logout", async (req, res) => {
     req.session.destroy();
     res.redirect("login");
 });
-app.get("/station/assign", async (req, res) => {
+app.get("/station/assign", checkAuthentication, async (req, res) => {
     let errorMessage = req.session.errorMessage;
     req.session.errorMessage = null;
     let stations = await mongoose.model("Station").find();
@@ -129,39 +129,17 @@ app.post("/generateOtp", function (req, res) {
     client.verify.v2
         .services(verifySid)
         .verifications.create({ to: `+91${req.body.phone}`, channel: "sms" })
-        .then((verification) => console.log('OTP sent successfullty', verification.status))
-        .then(() => {
+        .then((verification) => {
+            console.log('OTP sent successfullty', verification.status);
             res.render("login", { errorMessage, phone: req.body.phone });
-        });
+        })
 });
 app.post("/login", function (req, res) {
     const phone = req.body.phone;
     const otp = req.body.otp;
 
     User.findOne({ phone: phone }, async (err, foundUser) => {
-        if (foundUser) {
-            const inventory = await mongoose.model("Inventory").find().populate(['station', 'vehicle']);
-            client.verify.v2
-                .services(verifySid)
-                .verificationChecks.create({ to: `+91${phone}`, code: otp })
-                .then((verification_check) => {
-                    console.log('OTP verification status', verification_check.status);
-                    if (verification_check.status === 'approved') {
-                        if (!req.session.user) {
-                            req.session.user = { phone: phone, id: foundUser._id, errorMessage: '', role: foundUser.role };
-                        }
-                        if (foundUser.role === 1) {
-                            res.render("adminLanding", { inventory });
-                        } else {
-                            res.render("landing", { inventory });
-                        }
-                    } else {
-                        req.session.errorMessage = "Wrong Otp";
-                        return res.redirect('/login');
-                    }
-                })
-                .catch(err => console.log(err ? err : 'errored'));
-        } else {
+        if (!foundUser) {
             const newUser = new User({
                 phone: req.body.phone,
                 role: 2
@@ -173,11 +151,31 @@ app.post("/login", function (req, res) {
                     if (!req.session.user) {
                         req.session.user = { phone: req.body.phone, id: newUser._id, errorMessage: '', role: newUser.role };
                     }
-                    res.redirect("landing");
+                    foundUser = newUser;
                 }
             });
-            console.log(err ? err : 'errored');
         }
+        const inventory = await mongoose.model("Inventory").find().populate(['station', 'vehicle']);
+        client.verify.v2
+            .services(verifySid)
+            .verificationChecks.create({ to: `+91${phone}`, code: otp })
+            .then((verification_check) => {
+                console.log('OTP verification status', verification_check.status);
+                if (verification_check.status === 'approved') {
+                    if (!req.session.user) {
+                        req.session.user = { phone: phone, id: foundUser._id, errorMessage: '', role: foundUser.role, inventory: inventory };
+                    }
+                    if (foundUser.role === 1) {
+                        res.redirect("/adminLanding");
+                    } else {
+                        res.redirect("/landing");
+                    }
+                } else {
+                    req.session.errorMessage = "Wrong Otp";
+                    return res.redirect('/login');
+                }
+            })
+            .catch(err => console.log(err ? err : 'errored'));
     });
 });
 
@@ -368,6 +366,13 @@ app.post("/booking/return", async (req, res) => {
         return res.redirect('/booking/list');
     } catch (err) {
         res.status(500).send(err.message);
+    }
+});
+app.post("/land", async (req, res) => {
+    if (req.session.user.role === 1) {
+        res.redirect("/adminLanding");
+    } else {
+        res.redirect("/landing");
     }
 });
 
